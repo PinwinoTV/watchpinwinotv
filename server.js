@@ -6,7 +6,7 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
-const CLAVE_ADMIN = "tu_clave_secreta_123";
+const CLAVE_ADMIN = "Aiko0309";
 
 app.use(express.static('public'));
 
