@@ -102,6 +102,24 @@
         .btn-twitch {
             background-color: #9146FF;
         }
+                .btn-sub-texto {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 30px;
+            padding: 0 12px;
+            border-radius: 6px;
+            background-color: #9146FF;
+            color: white;
+            font-size: 13px;
+            font-weight: bold;
+            text-decoration: none;
+            transition: transform 0.15s ease, opacity 0.15s ease;
+        }
+        .btn-sub-texto:hover {
+            transform: scale(1.05);
+            opacity: 0.9;
+        }
         .btn-youtube {
             background-color: #FF0000;
         }
@@ -137,18 +155,26 @@
             </div>
 
             <div class="barra-redes">
-                <a id="link-sub" target="_blank" class="btn-logo btn-twitch" title="Suscribirse en Twitch">
+                <!-- 1. Logo Twitch (Para Follow en tu canal) -->
+                <a id="link-follow" target="_blank" class="btn-logo btn-twitch" title="Seguir en Twitch">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="white">
                         <path d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714Z"/>
                     </svg>
                 </a>
 
+                <!-- 2. Botón con texto Suscribirse -->
+                <a id="link-sub" target="_blank" class="btn-sub-texto" title="Suscribirse en Twitch">
+                    Suscribirse
+                </a>
+
+                <!-- 3. Logo YouTube -->
                 <a id="link-yt" target="_blank" class="btn-logo btn-youtube" title="Canal de YouTube">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="white">
                         <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
                     </svg>
                 </a>
             </div>
+
 
             <div class="caja-chat">
                 <iframe id="frame-chat"></iframe>
@@ -166,6 +192,7 @@
         // Asignar los enlaces automáticamente sin recortes
         document.getElementById('frame-stream').src = "https:/" + "/player." + "twitch.tv/?channel=" + CANAL_TWITCH + "&parent=" + DOMINIO_WEB;
         document.getElementById('frame-chat').src = "https:/" + "/www." + "twitch.tv/embed/" + CANAL_TWITCH + "/chat?darkpopout&parent=" + DOMINIO_WEB;
+                document.getElementById('link-follow').href = "https:/" + "/www." + "twitch.tv/" + CANAL_TWITCH;
         document.getElementById('link-sub').href = "https:/" + "/www." + "twitch.tv/subs/" + CANAL_TWITCH;
         document.getElementById('link-yt').href = "https:/" + "/www." + "youtube.com/" + USUARIO_YOUTUBE;
 
