@@ -22,7 +22,7 @@
             border-bottom: 1px solid #333;
         }
         input, button {
-            padding: 8px;
+            padding: 8px 12px;
             border-radius: 4px;
             border: none;
         }
@@ -31,6 +31,9 @@
             color: white;
             cursor: pointer;
             font-weight: bold;
+        }
+        button:hover {
+            background: #772ce8;
         }
         .contenedor {
             display: flex;
@@ -43,21 +46,74 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            position: relative;
         }
         video {
             width: 100%;
             height: 100%;
             max-height: 100vh;
         }
-        .seccion-stream {
+        #btn-sync {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            z-index: 10;
+            background: rgba(145, 70, 255, 0.9);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+            font-size: 14px;
+        }
+        .seccion-derecha {
             flex: 1;
             min-width: 340px;
+            max-width: 380px;
+            display: flex;
+            flex-direction: column;
             border-left: 1px solid #26262c;
+            background: #18181b;
+        }
+        .caja-stream {
+            width: 100%;
+            aspect-ratio: 16 / 10;
+            background: black;
+        }
+        .barra-redes {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 14px;
+            padding: 6px 0;
+            background: #1f1f23;
+            border-top: 1px solid #26262c;
+            border-bottom: 1px solid #26262c;
+        }
+        .btn-logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 30px;
+            height: 30px;
+            border-radius: 6px;
+            transition: transform 0.15s ease, opacity 0.15s ease;
+        }
+        .btn-logo:hover {
+            transform: scale(1.1);
+            opacity: 0.9;
+        }
+        .btn-twitch {
+            background-color: #9146FF;
+        }
+        .btn-youtube {
+            background-color: #FF0000;
+        }
+        .caja-chat {
+            flex: 1;
+            width: 100%;
         }
         iframe {
             width: 100%;
             height: 100%;
             border: none;
+            display: block;
         }
     </style>
 </head>
@@ -70,28 +126,65 @@
     </div>
 
     <div class="contenedor">
-        <!-- Reproductor del Anime -->
         <div class="seccion-anime">
+            <button id="btn-sync" onclick="sincronizarAhora()">🔴 Sincronizar en vivo (00:00)</button>
             <video id="reproductor" controls></video>
         </div>
 
-        <!-- Tu Stream de Twitch -->
-        <div class="seccion-stream">
-            <iframe
-                src="https://player.twitch.tv/?channel=pinwinotv&parent=watchpinwinotv.onrender.com"
-                allowfullscreen>
-            </iframe>
+        <div class="seccion-derecha">
+            <div class="caja-stream">
+                <iframe id="frame-stream" allowfullscreen></iframe>
+            </div>
+
+            <div class="barra-redes">
+                <a id="link-sub" target="_blank" class="btn-logo btn-twitch" title="Suscribirse en Twitch">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="white">
+                        <path d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714Z"/>
+                    </svg>
+                </a>
+
+                <a id="link-yt" target="_blank" class="btn-logo btn-youtube" title="Canal de YouTube">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="white">
+                        <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                    </svg>
+                </a>
+            </div>
+
+            <div class="caja-chat">
+                <iframe id="frame-chat"></iframe>
+            </div>
         </div>
     </div>
 
     <script src="/socket.io/socket.io.js"></script>
     <script>
+        // CONFIGURACIÓN DE TUS CANALES (Edita aquí si tu usuario de YouTube es distinto)
+        const CANAL_TWITCH = "pinwinotv";
+        const USUARIO_YOUTUBE = "@pinwinotv";
+        const DOMINIO_WEB = window.location.hostname;
+
+        // Asignar los enlaces automáticamente sin recortes
+        document.getElementById('frame-stream').src = "https://twitch.tv" + CANAL_TWITCH + "&parent=" + DOMINIO_WEB;
+        document.getElementById('frame-chat').src = "https://twitch.tv" + CANAL_TWITCH + "/chat?darkpopout&parent=" + DOMINIO_WEB;
+        document.getElementById('link-sub').href = "https://twitch.tv" + CANAL_TWITCH;
+        document.getElementById('link-yt').href = "https://youtube.com" + USUARIO_YOUTUBE;
+
+        // Lógica de sincronización
         const socket = io();
         const video = document.getElementById('reproductor');
+        const btnSync = document.getElementById('btn-sync');
+        const esAdmin = window.location.search.includes('admin=true');
         let ignorarEventos = false;
 
-        if (window.location.search.includes('admin=true')) {
+        if (esAdmin) {
             document.getElementById('panel-admin').style.display = 'flex';
+            btnSync.style.display = 'none';
+        }
+
+        function formatearTiempo(segundos) {
+            const min = Math.floor(segundos / 60);
+            const seg = Math.floor(segundos % 60);
+            return `${min < 10 ? '0' : ''}${min}:${seg < 10 ? '0' : ''}${seg}`;
         }
 
         function enviarOrden(tipo, extra = {}) {
@@ -105,12 +198,28 @@
             enviarOrden('cambiar_video', { url });
         }
 
+        function sincronizarAhora() {
+            socket.emit('pedir_sincronizacion');
+        }
+
+        if (esAdmin) {
+            setInterval(() => {
+                if (!video.paused && video.src) {
+                    enviarOrden('tiempo_actual', { tiempo: video.currentTime });
+                }
+            }, 1000);
+        }
+
         video.addEventListener('play', () => {
-            if (!ignorarEventos) enviarOrden('play', { tiempo: video.currentTime });
+            if (!ignorarEventos && esAdmin) enviarOrden('play', { tiempo: video.currentTime });
         });
 
         video.addEventListener('pause', () => {
-            if (!ignorarEventos) enviarOrden('pause', { tiempo: video.currentTime });
+            if (!ignorarEventos && esAdmin) enviarOrden('pause', { tiempo: video.currentTime });
+        });
+
+        socket.on('actualizar_reloj', (tiempoAdmin) => {
+            btnSync.innerText = `🔴 Sincronizar en vivo (${formatearTiempo(tiempoAdmin)})`;
         });
 
         socket.on('sincronizar', (estado) => {
@@ -123,6 +232,8 @@
             if (Math.abs(video.currentTime - estado.tiempo) > 1.5) {
                 video.currentTime = estado.tiempo;
             }
+
+            btnSync.innerText = `🔴 Sincronizar en vivo (${formatearTiempo(estado.tiempo)})`;
 
             if (estado.reproduciendo) {
                 video.play().catch(() => console.log("Haz clic en la pantalla para activar el audio"));
