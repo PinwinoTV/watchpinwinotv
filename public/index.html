@@ -164,10 +164,10 @@
         const DOMINIO_WEB = window.location.hostname;
 
         // Asignar los enlaces automáticamente sin recortes
-        document.getElementById('frame-stream').src = "https://twitch.tv" + CANAL_TWITCH + "&parent=" + DOMINIO_WEB;
-        document.getElementById('frame-chat').src = "https://twitch.tv" + CANAL_TWITCH + "/chat?darkpopout&parent=" + DOMINIO_WEB;
-        document.getElementById('link-sub').href = "https://twitch.tv" + CANAL_TWITCH;
-        document.getElementById('link-yt').href = "https://youtube.com" + USUARIO_YOUTUBE;
+        document.getElementById('frame-stream').src = "https:/" + "/player." + "twitch.tv/?channel=" + CANAL_TWITCH + "&parent=" + DOMINIO_WEB;
+        document.getElementById('frame-chat').src = "https:/" + "/www." + "twitch.tv/embed/" + CANAL_TWITCH + "/chat?darkpopout&parent=" + DOMINIO_WEB;
+        document.getElementById('link-sub').href = "https:/" + "/www." + "twitch.tv/subs/" + CANAL_TWITCH;
+        document.getElementById('link-yt').href = "https:/" + "/www." + "youtube.com/" + USUARIO_YOUTUBE;
 
         // Lógica de sincronización
         const socket = io();
