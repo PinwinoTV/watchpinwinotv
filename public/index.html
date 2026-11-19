@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Watch Party - PinwinoTV</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            background-color: #0e0e10;
+            color: white;
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+        #panel-admin {
+            background: #18181b;
+            padding: 10px;
+            display: none;
+            gap: 10px;
+            border-bottom: 1px solid #333;
+        }
+        input, button {
+            padding: 8px;
+            border-radius: 4px;
+            border: none;
+        }
+        button {
+            background: #9146FF;
+            color: white;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .contenedor {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+        .seccion-anime {
+            flex: 3;
+            background: black;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        video {
+            width: 100%;
+            height: 100%;
+            max-height: 100vh;
+        }
+        .seccion-stream {
+            flex: 1;
+            min-width: 340px;
+            border-left: 1px solid #26262c;
+        }
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="panel-admin">
+        <input type="password" id="clave" placeholder="Clave de admin">
+        <input type="text" id="url-video" placeholder="Enlace directo del capítulo (.mp4)" style="flex: 1;">
+        <button onclick="cargarVideo()">Cargar Episodio</button>
+    </div>
+
+    <div class="contenedor">
+        <!-- Reproductor del Anime -->
+        <div class="seccion-anime">
+            <video id="reproductor" controls></video>
+        </div>
+
+        <!-- Tu Stream de Twitch -->
+        <div class="seccion-stream">
+            <iframe
+                src="https://twitch.tv"
+                allowfullscreen>
+            </iframe>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+        const video = document.getElementById('reproductor');
+        let ignorarEventos = false;
+
+        if (window.location.search.includes('admin=true')) {
+            document.getElementById('panel-admin').style.display = 'flex';
+        }
+
+        function enviarOrden(tipo, extra = {}) {
+            const clave = document.getElementById('clave').value;
+            if (!clave) return;
+            socket.emit('accion_admin', { clave, tipo, ...extra });
+        }
+
+        function cargarVideo() {
+            const url = document.getElementById('url-video').value;
+            enviarOrden('cambiar_video', { url });
+        }
+
+        video.addEventListener('play', () => {
+            if (!ignorarEventos) enviarOrden('play', { tiempo: video.currentTime });
+        });
+
+        video.addEventListener('pause', () => {
+            if (!ignorarEventos) enviarOrden('pause', { tiempo: video.currentTime });
+        });
+
+        socket.on('sincronizar', (estado) => {
+            ignorarEventos = true;
+
+            if (estado.url && video.src !== estado.url) {
+                video.src = estado.url;
+            }
+
+            if (Math.abs(video.currentTime - estado.tiempo) > 1.5) {
+                video.currentTime = estado.tiempo;
+            }
+
+            if (estado.reproduciendo) {
+                video.play().catch(() => console.log("Haz clic en la pantalla para activar el audio"));
+            } else {
+                video.pause();
+            }
+
+            setTimeout(() => { ignorarEventos = false; }, 300);
+        });
+    </script>
+</body>
+</html>
