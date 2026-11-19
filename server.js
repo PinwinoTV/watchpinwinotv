@@ -6,7 +6,6 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
-// Contraseña secreta para que SOLO TÚ puedas controlar el video
 const CLAVE_ADMIN = "tu_clave_secreta_123";
 
 app.use(express.static('public'));
@@ -18,10 +17,8 @@ let estadoVideo = {
 };
 
 io.on('connection', (socket) => {
-    // Enviar el estado actual al espectador que acaba de entrar
     socket.emit('sincronizar', estadoVideo);
 
-    // Recibir órdenes del administrador (tú)
     socket.on('accion_admin', (datos) => {
         if (datos.clave !== CLAVE_ADMIN) return;
 
@@ -29,16 +26,25 @@ io.on('connection', (socket) => {
             estadoVideo.url = datos.url;
             estadoVideo.tiempo = 0;
             estadoVideo.reproduciendo = true;
+            io.emit('sincronizar', estadoVideo);
         } else if (datos.tipo === 'play') {
             estadoVideo.tiempo = datos.tiempo;
             estadoVideo.reproduciendo = true;
+            io.emit('sincronizar', estadoVideo);
         } else if (datos.tipo === 'pause') {
             estadoVideo.tiempo = datos.tiempo;
             estadoVideo.reproduciendo = false;
+            io.emit('sincronizar', estadoVideo);
+        } else if (datos.tipo === 'tiempo_actual') {
+            // Actualiza el minuto en vivo sin forzar salto a los demás
+            estadoVideo.tiempo = datos.tiempo;
+            socket.broadcast.emit('actualizar_reloj', estadoVideo.tiempo);
         }
+    });
 
-        // Enviar la orden a todos los espectadores conectados
-        io.emit('sincronizar', estadoVideo);
+    // Cuando un espectador aprieta el botón de sincronizar
+    socket.on('pedir_sincronizacion', () => {
+        socket.emit('sincronizar', estadoVideo);
     });
 });
 
